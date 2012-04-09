@@ -17,7 +17,11 @@ class Undestroy::Binding::ActiveRecord
   end
 
   def before_destroy(instance)
-    config.internals[:archive].new(:config => config, :source => instance).run
+    config.internals[:archive].new(
+      :config => config,
+      :transfer_options => { :target => target(instance) },
+      :source => instance
+    ).run if active?
   end
 
   def prefix_table_name(name)
@@ -33,6 +37,12 @@ class Undestroy::Binding::ActiveRecord
   end
 
   protected
+
+  def target(source)
+    source_pk = config.source_class.primary_key
+    target_pk = config.target_class.primary_key
+    config.target_class.where(target_pk => source[source_pk]).first
+  end
 
   def set_defaults
     self.config.source_class = self.model

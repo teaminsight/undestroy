@@ -21,7 +21,7 @@ module Undestroy::Archive::Test
     subject { archive_instance }
     desc 'basic instance'
 
-    should have_accessors :source, :config, :transfer
+    should have_accessors :source, :config, :transfer, :transfer_options
   end
 
   class InitMethod < Base
@@ -46,6 +46,11 @@ module Undestroy::Archive::Test
     should "set optional :transfer to transfer attr" do
       obj = archive_instance :transfer => "foo"
       assert_equal "foo", obj.transfer
+    end
+
+    should "set optional :transfer_options to transfer_options attr" do
+      obj = archive_instance :transfer_options => { :foo => 'bar' }
+      assert_equal({ :foo => 'bar' }, obj.transfer_options)
     end
   end
 
@@ -79,6 +84,24 @@ module Undestroy::Archive::Test
       target = @archive.transfer.target
       assert_equal @archive.source, val
       assert_equal "FOO", target.attributes[:test]
+    end
+
+    should "merge transfer_options attr onto arguments" do
+      fixture = Class.new do
+        attr_accessor :args
+        def initialize(args)
+          @args = args
+        end
+        def [](key)
+          @args[key]
+        end
+      end
+      @archive.config.internals[:transfer] = fixture
+      @archive.transfer_options = { :foo => 'bar', :fields => 123 }
+
+      assert_equal 'bar', @archive.transfer[:foo]
+      assert_equal 123, @archive.transfer[:fields]
+      assert_equal @archive.config.target_class, @archive.transfer[:klass]
     end
   end
 

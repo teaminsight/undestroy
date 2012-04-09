@@ -23,7 +23,8 @@ module Undestroy::Transfer::Test
         :name => "Foo",
         :description => "Foo Description"
       }
-      @transfer = subject.new :klass => Undestroy::Test::Fixtures::ARFixture, :fields => @fields
+      @init_args = { :klass => Undestroy::Test::Fixtures::ARFixture, :fields => @fields }
+      @transfer = subject.new @init_args
     end
 
     should "raise ArgumentError if no :klass key" do
@@ -32,6 +33,12 @@ module Undestroy::Transfer::Test
 
     should "default :fields to empty hash" do
       assert_not_raises { subject.new :klass => Undestroy::Test::Fixtures::ARFixture }
+    end
+
+    should "use :target arg if passed" do
+      target = @init_args[:klass].new
+      @transfer = subject.new @init_args.merge(:target => target)
+      assert_equal target.object_id, @transfer.target.object_id
     end
 
     should "create :klass instance with :fields" do

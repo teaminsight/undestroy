@@ -307,8 +307,31 @@ module Undestroy::Binding::ActiveRecord::Test
       subject.config.internals[:archive] = test_class
       subject.before_destroy(ar_source)
 
-      assert_equal({ :config => subject.config, :source => ar_source }, test_class.data[:args])
+      assert_equal subject.config, test_class.data[:args][:config]
+      assert_equal ar_source, test_class.data[:args][:source]
       assert_equal [[:run]], test_class.data[:calls]
+    end
+
+    should "pass :target value in :transfer_options if archive record exists and nil otherwise" do
+      archive_class = Undestroy::Test::Fixtures::Archive
+      ar_source = Undestroy::Test::Fixtures::ARFixture.new
+      ar_source[:id] = 1
+      subject.config.internals[:archive] = archive_class
+      subject.config.source_class = ar_source.class
+      subject.config.target_class = ar_source.class
+      subject.before_destroy(ar_source)
+
+      assert_equal [:where, [{ :id => 1 }]], ar_source.calls[0]
+      assert_equal [:first, []], ar_source.calls[1]
+    end
+
+    should "not run the archival if active is false" do
+      archive_class = Undestroy::Test::Fixtures::Archive
+      ar_source = Undestroy::Test::Fixtures::ARFixture.new
+      subject.config.internals[:archive] = archive_class
+      subject.active = false
+      subject.before_destroy(ar_source)
+      assert_equal 0, archive_class.data[:calls].size
     end
   end
 

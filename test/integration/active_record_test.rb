@@ -85,6 +85,20 @@ module Undestroy::Test::Integration::ActiveRecordTest
       assert_equal 0, @model.all.size
     end
 
+    should "only create archive record once" do
+      @model.undestroy
+      target_class = @model.undestroy_model_binding.config.target_class
+
+      @model.create(:name => "foo")
+      original1 = @model.first
+      original2 = @model.first
+      original1.destroy
+      assert_not_raises { original2.destroy }
+
+      assert target_class.first
+      assert_equal 1, target_class.count
+    end
+
     should "restore an archived record removing the archive" do
       @model.undestroy
       @model.create(:name => "Fart")
@@ -127,6 +141,16 @@ module Undestroy::Test::Integration::ActiveRecordTest
 
       assert_equal 2, @model.count
       assert_equal 1, @model.archived.count
+    end
+
+    should "destroy without archive when destory! called" do
+      @model.undestroy
+      record = @model.create :name => "Foo"
+      assert_equal 1, @model.count
+
+      record.destroy!
+      assert_equal 0, @model.count
+      assert_equal 0, @model.archived.count
     end
   end
 

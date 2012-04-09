@@ -1,7 +1,11 @@
 
 class Undestroy::Test::Fixtures::ARFixture
+  cattr_accessor :calls, :primary_key
   attr_accessor :attributes
   attr_reader :saved
+
+  self.calls = []
+  self.primary_key = :id
 
   alias :saved? :saved
 
@@ -39,6 +43,15 @@ class Undestroy::Test::Fixtures::ARFixture
         fixture[field] = value
       end
     end
+  end
+
+  def self.where(*attrs)
+    self.calls << [:where, attrs]
+    self
+  end
+
+  def self.first(*attrs)
+    self.calls << [:first, attrs]
   end
 
 end

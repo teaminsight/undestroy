@@ -1,6 +1,6 @@
 
 class Undestroy::Archive
-  attr_accessor :source, :config, :transfer
+  attr_accessor :source, :config, :transfer, :transfer_options
 
   def initialize(args={})
     validate_arguments(args)
@@ -8,12 +8,15 @@ class Undestroy::Archive
     self.source = args[:source]
     self.config = args[:config]
     self.transfer = args[:transfer]
+    self.transfer_options = args[:transfer_options]
   end
 
   def transfer
     @transfer ||= self.config.internals[:transfer].new(
-      :klass => self.config.target_class,
-      :fields => archive_fields
+      {
+        :klass => self.config.target_class,
+        :fields => archive_fields
+      }.merge(self.transfer_options || {})
     )
   end
 
